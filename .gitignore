@@ -1,0 +1,31 @@
+# Documentação de planejamento interno
+/Docs/
+Docs/
+
+# Ambientes virtuais Python
+.venv/
+venv/
+env/
+ENV/
+
+# Cache e bytecode Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Testes e cobertura
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Configurações de IDE e sistema operacional
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+.env

@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recomendação de Notebooks por Perfil - MVP</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg: #18181b;
+            --card-bg: #202024;
+            --surface-bg: #27272a;
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --border: #3f3f46;
+        }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            max-width: 720px;
+            margin: 32px auto;
+            padding: 20px;
+            line-height: 1.5;
+        }
+        .card {
+            background: var(--card-bg);
+            padding: 28px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--border);
+        }
+        .header {
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 14px;
+        }
+        .header h2 {
+            margin: 0 0 6px 0;
+            font-size: 1.45rem;
+            color: var(--text-main);
+        }
+        .header p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        .presets {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+        .preset-btn {
+            flex: 1;
+            min-width: 170px;
+            background: var(--surface-bg);
+            color: #d4d4d8;
+            border: 1px solid var(--border);
+            padding: 9px 12px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .preset-btn:hover {
+            background: #323238;
+            border-color: #60a5fa;
+            color: #ffffff;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+        .form-group {
+            margin-bottom: 14px;
+        }
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .label-row {
+            margin-bottom: 6px;
+        }
+        .label-main {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        label {
+            display: inline;
+            margin-bottom: 0;
+            font-weight: 600;
+            font-size: 0.92rem;
+            color: var(--text-main);
+        }
+        .tech-term {
+            display: block;
+            font-weight: 400;
+            color: var(--text-muted);
+            font-size: 0.77rem;
+            margin-top: 2px;
+        }
+        .help-btn {
+            flex-shrink: 0;
+            width: 21px;
+            height: 21px;
+            border-radius: 50%;
+            border: 1px solid rgba(59, 130, 246, 0.45);
+            background: rgba(59, 130, 246, 0.14);
+            color: #60a5fa;
+            font-size: 0.76rem;
+            font-weight: 700;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            padding: 0;
+        }
+        .help-btn:hover,
+        .help-btn[aria-expanded="true"] {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+        }
+        .help-box {
+            display: none;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-left: 4px solid var(--primary);
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            font-size: 0.81rem;
+            color: #e2e8f0;
+        }
+        .help-box.open {
+            display: block;
+        }
+        .help-box-title {
+            font-weight: 700;
+            color: #93c5fd;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .help-close {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 1rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0 2px;
+        }
+        .help-close:hover {
+            color: #f8fafc;
+        }
+        .help-box ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+        .help-box li {
+            margin-bottom: 4px;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            background: #18181b;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.93rem;
+            box-sizing: border-box;
+            transition: border-color 0.15s ease;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        button[type="submit"] {
+            width: 100%;
+            background: var(--primary);
+            color: #ffffff;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            margin-top: 6px;
+        }
+        button[type="submit"]:hover {
+            background: var(--primary-hover);
+        }
+        #result {
+            margin-top: 22px;
+            display: none;
+        }
+        .profile-banner {
+            padding: 16px 18px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .perfil-0 {
+            background: rgba(20, 83, 45, 0.35);
+            color: #86efac;
+            border: 1px solid rgba(74, 222, 128, 0.5);
+        }
+        .perfil-1 {
+            background: rgba(30, 58, 138, 0.4);
+            color: #93c5fd;
+            border: 1px solid rgba(96, 165, 250, 0.5);
+        }
+        .perfil-2 {
+            background: rgba(124, 45, 18, 0.4);
+            color: #fdba74;
+            border: 1px solid rgba(251, 146, 60, 0.55);
+        }
+        .erro-banner {
+            background: rgba(127, 29, 29, 0.35);
+            color: #fca5a5;
+            border: 1px solid rgba(248, 113, 113, 0.5);
+            padding: 14px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+        .section-block {
+            background: #18181c;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .section-title {
+            margin: 0 0 12px 0;
+            font-size: 0.96rem;
+            font-weight: 700;
+            color: #e4e4e7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .trends-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+            gap: 10px;
+        }
+        .trend-card {
+            background: var(--card-bg);
+            border: 1px solid #2e2e36;
+            border-radius: 6px;
+            padding: 10px 12px;
+        }
+        .trend-label {
+            font-size: 0.74rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .trend-value {
+            font-size: 0.98rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-top: 3px;
+        }
+        .trend-sub {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .nb-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .nb-card {
+            background: var(--card-bg);
+            border: 1px solid #32323a;
+            border-radius: 8px;
+            padding: 12px 14px;
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+        .nb-thumb {
+            width: 76px;
+            height: 76px;
+            object-fit: contain;
+            background: #ffffff;
+            border-radius: 6px;
+            padding: 4px;
+            flex-shrink: 0;
+            border: 1px solid var(--border);
+        }
+        .nb-content {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .nb-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .nb-title, .nb-title-link {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #f4f4f5;
+            text-decoration: none;
+            transition: color 0.15s ease;
+        }
+        .nb-title-link:hover {
+            color: #60a5fa;
+            text-decoration: underline;
+        }
+        .nb-ml-btn {
+            font-size: 0.74rem;
+            font-weight: 600;
+            padding: 2px 9px;
+            border-radius: 4px;
+            background: rgba(250, 204, 21, 0.14);
+            border: 1px solid rgba(250, 204, 21, 0.45);
+            color: #fde047;
+            text-decoration: none;
+            margin-left: auto;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .nb-ml-btn:hover {
+            background: #facc15;
+            color: #18181b;
+        }
+        .nb-price {
+            font-weight: 700;
+            font-size: 0.96rem;
+            color: #60a5fa;
+            white-space: nowrap;
+        }
+        .nb-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+        .badge {
+            font-size: 0.74rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: var(--surface-bg);
+            border: 1px solid var(--border);
+            color: #d4d4d8;
+        }
+        .badge-gpu {
+            background: rgba(234, 88, 12, 0.2);
+            border-color: rgba(251, 146, 60, 0.45);
+            color: #fdba74;
+            font-weight: 600;
+        }
+        .match-bar-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.76rem;
+            color: #a1a1aa;
+        }
+        .match-track {
+            flex: 1;
+            height: 6px;
+            background: #27272a;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .match-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #22c55e);
+            border-radius: 999px;
+        }
+        .lgpd-notice {
+            margin-top: 18px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            text-align: center;
+            background: #18181b;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px dashed var(--border);
+        }
+        .footer-links {
+            margin-top: 12px;
+            text-align: center;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .footer-links a, .footer-links button.link-btn {
+            color: var(--text-muted);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            background: none;
+            border: none;
+            padding: 0;
+            font: inherit;
+            cursor: pointer;
+            transition: color 0.15s ease;
+        }
+        .footer-links a:hover, .footer-links button.link-btn:hover {
+            color: #60a5fa;
+        }
+        #datasetDrawer {
+            display: none;
+            margin-top: 14px;
+            background: #18181b;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 0.8rem;
+        }
+        .drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: 220px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--card-bg);
+        }
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+            text-align: left;
+        }
+        table.data-table th, table.data-table td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #2e2e36;
+            color: #e4e4e7;
+        }
+        table.data-table th {
+            background: var(--surface-bg);
+            color: #d4d4d8;
+            position: sticky;
+            top: 0;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <h2>Sistema Inteligente de Recomendação de Notebooks</h2>
+            <p>Classificação de Perfil por Machine Learning, Top-5 por Similaridade de Cosseno e Tendências de Mercado</p>
+        </div>
+
+        <div class="presets">
+            <button type="button" class="preset-btn" id="btnPerfilBasico">
+                📚 Uso Básico / Estudos
+            </button>
+            <button type="button" class="preset-btn" id="btnPerfilTrabalho">
+                💻 Trabalho / Programação
+            </button>
+            <button type="button" class="preset-btn" id="btnPerfilGamer">
+                🎮 Jogos / Edição 3D
+            </button>
+        </div>
+
+        <form id="calcForm">
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <div class="label-row">
+                        <div class="label-main">
+                            <label for="preco">Orçamento Máximo Desejado (R$)</label>
+                            <button type="button" class="help-btn" data-help-target="help-preco" aria-expanded="false" aria-controls="help-preco" title="Dica sobre faixas de preço">?</button>
+                        </div>
+                        <span class="tech-term">Atributo: <code>preco</code> (R$ 1.200 a R$ 25.000 — anúncios de peças avulsas já filtrados)</span>
+                    </div>
+                    <div id="help-preco" class="help-box" role="region" aria-label="Ajuda sobre Orçamento">
+                        <div class="help-box-title">
+                            <span>Faixas de Orçamento no Mercado Brasileiro</span>
+                            <button type="button" class="help-close" data-help-close="help-preco" aria-label="Fechar ajuda">&times;</button>
+                        </div>
+                        <ul>
+                            <li><strong>Até R$ 2.800:</strong> Notebooks de entrada para estudos, pacote Office, PDFs e videoaulas.</li>
+                            <li><strong>R$ 3.000 a R$ 5.200:</strong> Intermediários com Core i5/i7 ou Ryzen 5/7 e 16 GB de RAM para programação e multitarefa.</li>
+                            <li><strong>Acima de R$ 5.200:</strong> Notebooks Gamer e Workstations com placa de vídeo dedicada (RTX/GTX) para jogos e renderização 3D.</li>
+                        </ul>
+                    </div>
+                    <input type="number" id="preco" required min="1200" max="25000" step="50" value="4200">
+                </div>
+
+                <div class="form-group">
+                    <div class="label-row">
+                        <div class="label-main">
+                            <label for="ram_gb">Memória RAM (Multitarefa)</label>
+                            <button type="button" class="help-btn" data-help-target="help-ram" aria-expanded="false" aria-controls="help-ram" title="Quanto de RAM escolher?">?</button>
+                        </div>
+                        <span class="tech-term">Atributo: <code>ram_gb</code> (extraído via Regex)</span>
+                    </div>
+                    <div id="help-ram" class="help-box" role="region" aria-label="Ajuda sobre Memória RAM">
+                        <div class="help-box-title">
+                            <span>Como escolher a Memória RAM?</span>
+                            <button type="button" class="help-close" data-help-close="help-ram" aria-label="Fechar ajuda">&times;</button>
+                        </div>
+                        <ul>
+                            <li><strong>8 GB:</strong> Mínimo recomendado hoje para estudar e navegar sem travamentos.</li>
+                            <li><strong>16 GB:</strong> Ponto ideal para trabalhar com várias abas, Docker, IDEs ou jogar.</li>
+                            <li><strong>32 GB ou 64 GB:</strong> Indicado para máquinas virtuais pesadas, edição 4K e projetos 3D.</li>
+                        </ul>
+                    </div>
+                    <select id="ram_gb" required>
+                        <option value="4">4 GB (Básico Restrito)</option>
+                        <option value="8">8 GB (Uso Diário / Estudos)</option>
+                        <option value="16" selected>16 GB (Programação / Jogos)</option>
+                        <option value="32">32 GB (Alto Desempenho / 3D)</option>
+                        <option value="64">64 GB (Workstation Extrema)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <div class="label-row">
+                        <div class="label-main">
+                            <label for="ssd_gb">Armazenamento SSD</label>
+                            <button type="button" class="help-btn" data-help-target="help-ssd" aria-expanded="false" aria-controls="help-ssd" title="Quanto espaço escolher?">?</button>
+                        </div>
+                        <span class="tech-term">Atributo: <code>ssd_gb</code> (1 TB = 1024 GB)</span>
+                    </div>
+                    <div id="help-ssd" class="help-box" role="region" aria-label="Ajuda sobre Armazenamento SSD">
+                        <div class="help-box-title">
+                            <span>Necessidade de Espaço (SSD NVMe)</span>
+                            <button type="button" class="help-close" data-help-close="help-ssd" aria-label="Fechar ajuda">&times;</button>
+                        </div>
+                        <ul>
+                            <li><strong>256 GB (Baixo):</strong> Suficiente para documentos, navegador e uso em nuvem.</li>
+                            <li><strong>512 GB (Médio):</strong> Padrão mais equilibrado para programas de trabalho e alguns jogos.</li>
+                            <li><strong>1024 GB / 1 TB+ (Alto):</strong> Ideal para guardar acervos de vídeo bruto e jogos modernos.</li>
+                        </ul>
+                    </div>
+                    <select id="ssd_gb" required>
+                        <option value="128">128 GB (Baixo)</option>
+                        <option value="256">256 GB (Essencial — Estudos)</option>
+                        <option value="512" selected>512 GB (Médio — Recomendado)</option>
+                        <option value="1024">1024 GB / 1 TB (Alto)</option>
+                        <option value="2048">2048 GB / 2 TB (Máximo)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <div class="label-row">
+                        <div class="label-main">
+                            <label for="score_cpu">Potência do Processador</label>
+                            <button type="button" class="help-btn" data-help-target="help-cpu" aria-expanded="false" aria-controls="help-cpu" title="Entenda o Score de CPU">?</button>
+                        </div>
+                        <span class="tech-term">Atributo: <code>score_cpu</code> (Escala de 1 a 5)</span>
+                    </div>
+                    <div id="help-cpu" class="help-box" role="region" aria-label="Ajuda sobre Processador">
+                        <div class="help-box-title">
+                            <span>Escala de Processadores (Score 1 a 5)</span>
+                            <button type="button" class="help-close" data-help-close="help-cpu" aria-label="Fechar ajuda">&times;</button>
+                        </div>
+                        <ul>
+                            <li><strong>Score 1–2:</strong> Celeron, Core i3 ou Ryzen 3 (tarefas leves e textos).</li>
+                            <li><strong>Score 3:</strong> Core i5 ou Ryzen 5 (ótimo custo-benefício para trabalho e código).</li>
+                            <li><strong>Score 4–5:</strong> Core i7/i9, Ryzen 7/9 e linha Apple M (compilação pesada, 3D e jogos).</li>
+                        </ul>
+                    </div>
+                    <select id="score_cpu" required>
+                        <option value="1">1 — Básico (Celeron / Athlon / Snapdragon)</option>
+                        <option value="2">2 — Entrada (Intel Core i3 / AMD Ryzen 3)</option>
+                        <option value="3" selected>3 — Intermediário (Intel Core i5 / AMD Ryzen 5)</option>
+                        <option value="4">4 — Avançado (Core i7 / Ryzen 7 / Apple M1–M2)</option>
+                        <option value="5">5 — Extremo (Core i9 / Ryzen 9 / Apple M3 Pro)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <div class="label-row">
+                        <div class="label-main">
+                            <label for="tem_gpu_dedicada">Placa de Vídeo Dedicada</label>
+                            <button type="button" class="help-btn" data-help-target="help-gpu" aria-expanded="false" aria-controls="help-gpu" title="Preciso de placa de vídeo dedicada?">?</button>
+                        </div>
+                        <span class="tech-term">Atributo: <code>tem_gpu_dedicada</code> (0 ou 1)</span>
+                    </div>
+                    <div id="help-gpu" class="help-box" role="region" aria-label="Ajuda sobre Placa de Vídeo">
+                        <div class="help-box-title">
+                            <span>Vídeo Integrado (0) vs. Dedicado (1)</span>
+                            <button type="button" class="help-close" data-help-close="help-gpu" aria-label="Fechar ajuda">&times;</button>
+                        </div>
+                        <ul>
+                            <li><strong>0 — Integrada:</strong> Mais leve, silencioso e com maior duração de bateria (ideal para estudos e programação web/backend).</li>
+                            <li><strong>1 — Dedicada (RTX / GTX / Radeon):</strong> Indispensável para jogos 3D, edição de vídeo pesada, CAD e IA local.</li>
+                        </ul>
+                    </div>
+                    <select id="tem_gpu_dedicada" required>
+                        <option value="0" selected>0 — Não (Vídeo Integrado — Estudos / Trabalho)</option>
+                        <option value="1">1 — Sim (GPU Dedicada RTX/GTX — Jogos / 3D)</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit">Recomendar Notebooks e Analisar Tendências</button>
+        </form>
+
+        <div id="result" role="region" aria-live="polite"></div>
+
+        <div class="lgpd-notice">
+            <strong>Privacidade &amp; DevSecOps (Privacy by Design):</strong> Nenhum dado pessoal (Nome, CPF ou E-mail) é coletado. Dados de vendedores dos anúncios foram anonimizados.
+        </div>
+
+        <div class="footer-links">
+            <button type="button" class="link-btn" id="btnToggleDataset">
+                Consultar catálogo padronizado (amostra CSV)
+            </button>
+            <span>•</span>
+            <a id="linkCsvRaw" href="http://localhost:5000/api/dataset/csv" target="_blank" rel="noopener noreferrer">
+                Baixar CSV bruto (notebooks.csv)
+            </a>
+            <span>•</span>
+            <a id="linkTrain" href="/train">
+                Treinar Modelo (/train)
+            </a>
+            <span>•</span>
+            <a href="https://developers.mercadolivre.com.br/pt_br/itens-e-buscas" target="_blank" rel="noopener noreferrer">
+                Doc API Mercado Livre
+            </a>
+        </div>
+
+        <div id="datasetDrawer">
+            <div class="drawer-header">
+                <span id="datasetMeta">Catálogo Padronizado via Regex (data/notebooks.csv)</span>
+            </div>
+            <div class="table-wrapper">
+                <table class="data-table" id="datasetTable">
+                    <thead>
+                        <tr>
+                            <th>marca</th>
+                            <th>titulo</th>
+                            <th>preco</th>
+                            <th>ram_gb</th>
+                            <th>ssd_gb</th>
+                            <th>cpu</th>
+                            <th>gpu</th>
+                            <th>target</th>
+                        </tr>
+                    </thead>
+                    <tbody id="datasetTbody">
+                        <tr><td colspan="8" style="text-align:center;">Carregando amostra...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

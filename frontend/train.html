@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treinamento do Modelo (train_model.py) - MVP</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg: #18181b;
+            --card-bg: #202024;
+            --surface-bg: #27272a;
+            --terminal-bg: #111114;
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --border: #3f3f46;
+        }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            max-width: 760px;
+            margin: 36px auto;
+            padding: 20px;
+            line-height: 1.5;
+        }
+        .card {
+            background: var(--card-bg);
+            padding: 28px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--border);
+        }
+        .header {
+            margin-bottom: 18px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .header h2 {
+            margin: 0 0 6px 0;
+            font-size: 1.35rem;
+            color: var(--text-main);
+        }
+        .header p {
+            margin: 0;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+        }
+        .back-link {
+            color: #93c5fd;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.35);
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .back-link:hover {
+            background: var(--primary);
+            color: #ffffff;
+        }
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+        .btn-run {
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-size: 0.92rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s ease, opacity 0.15s ease;
+        }
+        .btn-run:hover:not(:disabled) {
+            background: var(--primary-hover);
+        }
+        .btn-run:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        #statusBanner {
+            padding: 12px 14px;
+            border-radius: 8px;
+            margin-bottom: 14px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--surface-bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        #statusBanner.running {
+            background: rgba(30, 58, 138, 0.35);
+            border-color: rgba(96, 165, 250, 0.45);
+            color: #93c5fd;
+        }
+        #statusBanner.success {
+            background: rgba(20, 83, 45, 0.35);
+            border-color: rgba(74, 222, 128, 0.5);
+            color: #86efac;
+        }
+        #statusBanner.error {
+            background: rgba(127, 29, 29, 0.35);
+            border-color: rgba(248, 113, 113, 0.5);
+            color: #fca5a5;
+        }
+        .spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(147, 197, 253, 0.35);
+            border-top-color: #60a5fa;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+            flex-shrink: 0;
+        }
+        #statusBanner.running .spinner {
+            display: inline-block;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .terminal-header {
+            background: #18181c;
+            border: 1px solid var(--border);
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            padding: 8px 14px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            display: flex;
+            justify-content: space-between;
+        }
+        #logOutput {
+            background: var(--terminal-bg);
+            border: 1px solid var(--border);
+            border-radius: 0 0 8px 8px;
+            padding: 14px;
+            margin: 0;
+            min-height: 300px;
+            max-height: 460px;
+            overflow-y: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.82rem;
+            line-height: 1.55;
+            color: #e4e4e7;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .note {
+            margin-top: 14px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            background: #18181b;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px dashed var(--border);
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <div>
+                <h2>Execução de Treinamento do Modelo</h2>
+                <p>Executa <code>backend/train_model.py</code> e atualiza <code>backend/model.pkl</code> em memória</p>
+            </div>
+            <a id="backLink" href="/" class="back-link">← Voltar para Predição</a>
+        </div>
+
+        <div class="controls">
+            <button type="button" id="btnRunTrain" class="btn-run">
+                Executar Treinamento Novamente (train_model.py)
+            </button>
+            <span id="durationInfo" style="font-size: 0.82rem; color: var(--text-muted);"></span>
+        </div>
+
+        <div id="statusBanner" role="status" aria-live="polite">
+            <span class="spinner" aria-hidden="true"></span>
+            <span id="statusText">Preparando execução...</span>
+        </div>
+
+        <div class="terminal-header">
+            <span>Console de Saída — python backend/train_model.py</span>
+            <span id="exitCodeBadge"></span>
+        </div>
+        <pre id="logOutput">Aguardando início da execução...</pre>
+
+        <div class="note">
+            <strong>Governança &amp; Evolução Futura:</strong> Esta rota (<code>/train</code>) permite acionar e auditar o retreinamento do pipeline via interface web. Em ambiente produtivo corporativo, este endpoint pode ser protegido por autenticação/RBAC (controle de acesso por perfil).
+        </div>
+    </div>
+
+    <script>
+        const btnRunTrain = document.getElementById('btnRunTrain');
+        const statusBanner = document.getElementById('statusBanner');
+        const statusText = document.getElementById('statusText');
+        const logOutput = document.getElementById('logOutput');
+        const durationInfo = document.getElementById('durationInfo');
+        const exitCodeBadge = document.getElementById('exitCodeBadge');
+        const backLink = document.getElementById('backLink');
+
+        function getApiBaseUrl() {
+            return window.location.protocol.startsWith('http') && window.location.port === '5000'
+                ? ''
+                : 'http://localhost:5000';
+        }
+
+        if (backLink) {
+            backLink.href = `${getApiBaseUrl()}/`;
+        }
+
+        let activeSource = null;
+
+        function setStatus(state, message) {
+            statusBanner.className = state;
+            statusText.innerText = message;
+        }
+
+        function appendLog(line) {
+            logOutput.textContent += line + '\n';
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+
+        function executarTreinamento() {
+            if (activeSource) {
+                activeSource.close();
+                activeSource = null;
+            }
+
+            btnRunTrain.disabled = true;
+            logOutput.textContent = '';
+            durationInfo.innerText = '';
+            exitCodeBadge.innerText = 'Status: EM EXECUÇÃO';
+            setStatus('running', 'Executando backend/train_model.py... Acompanhe o log em tempo real abaixo.');
+
+            const streamUrl = `${getApiBaseUrl()}/api/train/stream`;
+            const source = new EventSource(streamUrl);
+            activeSource = source;
+
+            source.onmessage = (event) => {
+                try {
+                    const payload = JSON.parse(event.data);
+                    if (payload.type === 'start') {
+                        appendLog(`>>> ${payload.message}\n`);
+                    } else if (payload.type === 'log') {
+                        appendLog(payload.line);
+                    } else if (payload.type === 'done') {
+                        source.close();
+                        activeSource = null;
+                        btnRunTrain.disabled = false;
+                        durationInfo.innerText = payload.duration_s !== undefined
+                            ? `Duração: ${payload.duration_s}s`
+                            : '';
+                        exitCodeBadge.innerText = `Exit Code: ${payload.exit_code}`;
+
+                        if (payload.status === 'sucesso') {
+                            appendLog(`\n>>> [FINALIZADO] ${payload.message}`);
+                            setStatus('success', `${payload.message}`);
+                        } else {
+                            appendLog(`\n>>> [ERRO] ${payload.message}`);
+                            setStatus('error', `Erro no treinamento: ${payload.message}`);
+                        }
+                    }
+                } catch (err) {
+                    appendLog(event.data);
+                }
+            };
+
+            source.onerror = () => {
+                source.close();
+                activeSource = null;
+                btnRunTrain.disabled = false;
+                exitCodeBadge.innerText = 'Erro de conexão';
+                setStatus('error', 'Falha ao conectar com o servidor Back-end (http://localhost:5000). Verifique se python backend/app.py está em execução.');
+                appendLog('\n>>> [ERRO] Não foi possível estabelecer conexão com /api/train/stream.');
+            };
+        }
+
+        btnRunTrain.addEventListener('click', executarTreinamento);
+
+        // Inicia automaticamente ao abrir a URL /train
+        window.addEventListener('DOMContentLoaded', executarTreinamento);
+    </script>
+</body>
+</html>
