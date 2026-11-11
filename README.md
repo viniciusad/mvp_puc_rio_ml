@@ -72,8 +72,8 @@ mvp_puc_rio_final/
 
 ### 5.1. Clonar o Repositório
 ```bash
-git clone https://github.com/viniciusad/mvp_puc_rio_final.git
-cd mvp_puc_rio_final
+git clone https://github.com/viniciusad/mvp_puc_rio_ml.git
+cd mvp_puc_rio_ml
 ```
 
 ### 5.2. Criar e Ativar o Ambiente Virtual
