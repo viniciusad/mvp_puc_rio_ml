@@ -60,8 +60,6 @@ mvp_puc_rio_final/
 │   └── test_model.py              # Suíte PyTest: Quality Gate Duplo, Serviço e Rotas HTTP
 ├── data/
 │   └── notebooks.csv              # Base limpa de notebooks do mercado BR para leitura via GitHub Raw
-├── Docs/
-│   └── plano-implementacao-mvp.md # Plano tático de implementação do MVP
 ├── .gitignore                     # Exclusão de arquivos temporários e ambientes virtuais
 └── README.md                      # Documentação técnica completa do repositório
 ```
